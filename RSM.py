@@ -88,8 +88,10 @@ class RSM:
         self.nbv[self.nbv == self.entry_index] = self.exit_index
     
     def solve(self):   #main solver code
+        itr = 0
         while(True):
-            
+            itr+=1
+            print("iteration: ",itr)
             cb = [self.c[i] for i in self.bv]   #calculate cb from initail bv
             self.y = self.cal_y(cb)           #calculate y 
             self.obj = self.cal_obj()           
@@ -218,7 +220,7 @@ class RSM:
             cb = [self.c[i] for i in self.bv]
             self.y = self.cal_y(cb)        
             #checking for duality gap 
-            #print("primal obj value: ",self.obj," dual obj value", self.cal_dual_obj())
+            print("primal obj value: ",self.obj," dual obj value", self.cal_dual_obj())
     def Print(self):
         print("A",self.A)
         print("b",self.b)

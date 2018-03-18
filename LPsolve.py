@@ -87,4 +87,31 @@ if ret!="infeasible":
     print("x:  ",getattr(rsm2,'x'))
     print("y:  ",[round(x,10) for x in getattr(rsm2,'y')])
     print("obj:",getattr(rsm2,'obj'),"dual objective: ",rsm2.cal_dual_obj())
+
     
+    
+# In[23]:
+#------Accurancy code---------------#
+from sklearn import svm
+train_data = np.load("dataset\DB_Vecs.npy")
+train_label = np.load("dataset\DB_Labels.npy")
+test_data = np.load("dataset\Q_vecs.npy")
+one = np.array([[1]*689]).reshape((689,1))
+test_data = np.concatenate((test_data,one),axis = 1)
+clf = svm.SVC(kernel='linear', C=1, gamma=1)
+clf.fit(train_data,train_label)
+clf.score(train_data,train_label)
+svmans = clf.predict(test_data[:,:30])
+
+opt_x = np.load("opt_x.npy")
+ans = np.dot(test_data,opt_x[:31])
+anssave = ans
+ans[ans>0] = -1
+ans[ans<0] = 1
+count = 0
+for i in range(len(svmans)):
+    if svmans[i]==ans[i]:
+        count+=1
+print(float(count/689))
+
+
