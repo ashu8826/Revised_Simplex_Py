@@ -85,6 +85,7 @@ if ret!="infeasible":
     rsm2 = RSM.RSM(data.A,data.b,data.c,x,y,bv,phase1,noarti,E)  #solving original problem which Initial BFS as the BFS of aux LP with no artifical variable in it
     rsm2.solve()
     print("x:  ",getattr(rsm2,'x'))
+    np.save("result/opt_x",x)
     print("y:  ",[round(x,10) for x in getattr(rsm2,'y')])
     print("obj:",getattr(rsm2,'obj'),"dual objective: ",rsm2.cal_dual_obj())
 
@@ -103,11 +104,12 @@ clf.fit(train_data,train_label)
 clf.score(train_data,train_label)
 svmans = clf.predict(test_data[:,:30])
 
-opt_x = np.load("opt_x.npy")
+opt_x = np.load("result/opt_x.npy") #
 ans = np.dot(test_data,opt_x[:31])
 anssave = ans
-ans[ans>0] = -1
-ans[ans<0] = 1
+ans[ans>0] = 1
+ans[ans<0] = -1
+ans = -1 *ans
 count = 0
 for i in range(len(svmans)):
     if svmans[i]==ans[i]:
