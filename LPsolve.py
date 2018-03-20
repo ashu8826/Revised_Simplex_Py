@@ -89,31 +89,44 @@ if ret!="infeasible":
     print("y:  ",[round(x,10) for x in getattr(rsm2,'y')])
     print("obj:",getattr(rsm2,'obj'),"dual objective: ",rsm2.cal_dual_obj())
 
-    
+
     
 # In[23]:
 #------Accurancy code---------------#
-from sklearn import svm
-train_data = np.load("dataset\DB_Vecs.npy")
-train_label = np.load("dataset\DB_Labels.npy")
+import numpy as np
+from sklearn.metrics import precision_recall_fscore_support as score
+import random
+
 test_data = np.load("dataset\Q_vecs.npy")
-one = np.array([[1]*689]).reshape((689,1))
+no_train_sample = test_data.shape[0]
+no_variable = test_data.shape[1] + 1
+
+one = np.array([random.gauss(1, 0.1) for i in range(no_train_sample)]).reshape((no_train_sample,1))
 test_data = np.concatenate((test_data,one),axis = 1)
-clf = svm.SVC(kernel='linear', C=1, gamma=1)
-clf.fit(train_data,train_label)
-clf.score(train_data,train_label)
-svmans = clf.predict(test_data[:,:30])
 
-opt_x = np.load("result/opt_x.npy") #
-ans = np.dot(test_data,opt_x[:31])
-anssave = ans
-ans[ans>0] = 1
-ans[ans<0] = -1
-ans = -1 *ans
+truth = np.load("result/labelsfortestdata.npy")
+truth[truth==0] = -1
+
+hyper = []
+x = getattr(rsm2,'x')
+for i in range(0,len(x[:(no_variable*2)]),2):
+    hyper.append(x[i]-x[i+1])
+
+np.save("result/opt_x_100",getattr(rsm2,'x'))   
+
+pred = np.dot(test_data,hyper)
+pred[pred>0] = 1
+pred[pred<0] = -1
+pred = -1 *pred
 count = 0
-for i in range(len(svmans)):
-    if svmans[i]==ans[i]:
+for i in range(len(truth)):
+    if truth[i]==pred[i]:
         count+=1
-print(float(count/689))
+print(float(count/no_train_sample))
 
-
+precision, recall, fscore, support = score(truth, pred)
+print("Accuracy: ",count/no_train_sample)
+print("f1 score: ",fscore)
+print("precision score: ",precision)
+print("recall score: ",recall)
+print("support:  ",support)

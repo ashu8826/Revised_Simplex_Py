@@ -87,11 +87,11 @@ class RSM:
         self.bv[self.bv == self.exit_index] = self.entry_index
         self.nbv[self.nbv == self.entry_index] = self.exit_index
     
+    
     def solve(self):   #main solver code
         itr = 0
         while(True):
             itr+=1
-            print("iteration: ",itr)
             cb = [self.c[i] for i in self.bv]   #calculate cb from initail bv
             self.y = self.cal_y(cb)           #calculate y 
             self.obj = self.cal_obj()           
@@ -200,41 +200,39 @@ class RSM:
             if all(i <= 0 for i in self.pbar):
                 print("problem is unbounded in direction of :",self.entry_index+1,"p:",self.pbar)
                 return "unbounded"
-        
+            
             theta = sys.maxsize #have to be positive g
+            flag = 0
             for i in range(self.m):
                 th = self.x[self.bv[i]]/self.pbar[i]
-                if(((th < theta) or (th==theta and i<self.exit_index)) and th >0):  #blands's rule
+                if(th >0 and ((th < theta) or (th==theta and self.bv[i]<self.exit_index)) ):
                     theta = th
-                    self.exit_index = self.bv[i]
                     self.e_index = i
+                    self.exit_index = self.bv[i]
+                if th==0:
+                    for i in range(self.m):
+                        if self.pbar[i] > 0: #have to keep theta zero
+                            flag = 1
+                            break
+                    if(flag == 1):
+                        theta = 0
+                        self.exit_index = self.bv[i]
+                        self.e_index = i
+                        break
+                    
             
             self.x[self.entry_index] = theta
             for i in range(self.m):
                 self.x[self.bv[i]] = self.x[self.bv[i]] - self.pbar[i]*theta
             self.x[self.exit_index]  = 0.0
 
-            self.changeEbvnbv()
-
-            self.obj = self.cal_obj()
-            cb = [self.c[i] for i in self.bv]
-            self.y = self.cal_y(cb)        
+            e = [0]*(len(self.pbar)+1)
+            e[-1] = self.e_index
+            for i in range(len(self.pbar)):
+                e[i] = self.pbar[i]
+            self.E.append(e)
+            self.bv[self.bv == self.exit_index] = self.entry_index
+            self.nbv[self.nbv == self.entry_index] = self.exit_index
+      
             #checking for duality gap 
-            print("primal obj value: ",self.obj," dual obj value", self.cal_dual_obj())
-    def Print(self):
-        print("A",self.A)
-        print("b",self.b)
-        print("c",self.c)
-        print("x",self.x)
-        print("y",self.y)
-        print("bv",self.bv)
-        print("nbv",self.nbv)
-        print("m",self.m)
-        print("obj",self.obj)
-        print("exit_index",self.exit_index)
-        print("entry_index",self.entry_index)
-        print("E",self.E)
-        print("pbar",self.pbar)
-        print("e_index",self.e_index)
-        print("noarti",self.noarti)
-        print()
+            print("iteration: ",itr," entry: ",self.entry_index," exit: ",self.exit_index," theta: ",theta," obj: ",self.obj)
